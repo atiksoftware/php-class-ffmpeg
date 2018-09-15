@@ -492,10 +492,10 @@
 			}else{
 				$process = new Process($this->command . $append);
 				$process->run();
-				if (!$process->isSuccessful()) {
-					return false;
-				}
-				return $process->getOutput();
+				while ($process->isRunning()) {
+				    // waiting for process to finish
+				} 
+				return (bool)$process->isSuccessful();
 			}
 		}
 		/**
