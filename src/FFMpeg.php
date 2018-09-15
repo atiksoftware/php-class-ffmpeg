@@ -115,7 +115,14 @@
 		*/
 		public function __construct( $ffmpeg = null ,$input = false )
 		{
-			$this->ffmpeg( $ffmpeg );
+			if($ffmpeg == null){
+				if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+					$this->ffmpeg( __DIR__."/bin/ffmpeg.exe" );
+				}
+			}else{
+				$this->ffmpeg( $ffmpeg );
+			}
+
 			if (!empty($input)) {
 				$this->input( $input );
 			}
@@ -167,7 +174,7 @@
 					$options [] = "-".$option." ".strval($values);
 				}
 			}
-			$this->command = $this->ffmpeg." ".join(' ',$options)." ".$output . $this->STD;
+			$this->command = $this->ffmpeg." ".join(' ',$options)." \"".$output. "\"" . $this->STD;
 			return $this;
 		}
 		/**
@@ -490,12 +497,14 @@
 				trigger_error("Cannot execute a blank command",E_USER_ERROR);
 				return false;
 			}else{
-				$process = new Process($this->command . $append);
+				$process = new Process($this->command);
 				$process->run();
-				while ($process->isRunning()) {
-				    // waiting for process to finish
-				} 
-				return (bool)$process->isSuccessful();
+				$process->wait();
+				if (!$process->isSuccessful()) {
+					throw new ProcessFailedException($process);
+					return false;
+				}
+				return true;
 			}
 		}
 		/**
